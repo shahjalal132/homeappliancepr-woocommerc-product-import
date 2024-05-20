@@ -1,7 +1,5 @@
 <?php
 
-
-
 // Create wp_sync_products Table When Plugin Activated
 function ha_aswspr_products_table_create() {
 
