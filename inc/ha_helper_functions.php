@@ -6,7 +6,7 @@ function delete_all_woocommerce_products() {
     // Define arguments to query all products
     $args = array(
         'post_type'      => 'product',
-        'posts_per_page' => -1,
+        'posts_per_page' => 100,
     );
 
     // Retrieve all products based on the query arguments
@@ -18,7 +18,7 @@ function delete_all_woocommerce_products() {
     }
 
     // Return a message indicating that all WooCommerce products have been deleted
-    return '<h2>All WooCommerce products have been deleted.</h2>';
+    return '<h2>Products have been deleted.</h2>';
 }
 // Add a shortcode 'delete_all_products' that triggers the function
 add_shortcode( 'delete_all_products', 'delete_all_woocommerce_products' );

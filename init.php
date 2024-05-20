@@ -27,6 +27,8 @@ if ( !defined( 'HA_PLUGIN_PATH' ) ) {
 
 
 // Including requirements files
+require_once HA_PLUGIN_PATH . '/inc/ha_helper_functions.php';
+require_once HA_PLUGIN_PATH . '/inc/api_endpoints.php';
 require_once HA_PLUGIN_PATH . '/inc/ha_aswspr_product_db.php';
 require_once HA_PLUGIN_PATH . '/inc/aswspr_add_products_insert_db.php';
 require_once HA_PLUGIN_PATH . '/inc/ha_products_insert_woocommerce.php';
