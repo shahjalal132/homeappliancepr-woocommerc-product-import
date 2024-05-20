@@ -1,4 +1,5 @@
 <?php
+
 require_once HA_PLUGIN_PATH . '/vendor/autoload.php';
 
 use \JsonMachine\Items;
