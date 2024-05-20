@@ -99,12 +99,6 @@ function products_insert_woocommerce_callback() {
             $client->put( 'products/' . $product_id, $product_data );
         } else {
 
-            $wpdb->update(
-                $table_name_products,
-                [ 'status' => 'completed' ],
-                [ 'id' => $product->id ]
-            );
-
             // Create a new product
             $product_data = [
                 'name'          => $product_name,
@@ -163,6 +157,12 @@ function products_insert_woocommerce_callback() {
         } else {
             update_post_meta( $product_id, '_stock_status', 'instock' );
         }
+
+        $wpdb->update(
+            $table_name_products,
+            [ 'status' => 'completed' ],
+            [ 'id' => $product->id ]
+        );
 
         return '<h4>product insert successfully</h4>';
     }
