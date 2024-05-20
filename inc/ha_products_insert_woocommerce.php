@@ -28,47 +28,23 @@ function products_insert_woocommerce_callback() {
         $consumer_secret = 'cs_60723c6f2b6456a6b0b8a8172119ec554a282aed';
 
         // Extract product details from the decoded data
-        $warehouse_code  = isset( $product_data['WarehouseCode'] ) ? $product_data['WarehouseCode'] : '';
-        $warehouse_name  = isset( $product_data['WarehouseName'] ) ? $product_data['WarehouseName'] : '';
         $product_code    = isset( $product_data['ProductCode'] ) ? $product_data['ProductCode'] : '';
+        $color           = isset( $product_data['Color'] ) ? $product_data['Color'] : '';
         $product_name    = isset( $product_data['ProductName'] ) ? $product_data['ProductName'] : '';
         $department_code = isset( $product_data['DepartmentCode'] ) ? $product_data['DepartmentCode'] : '';
         $department_name = isset( $product_data['DepartmentName'] ) ? $product_data['DepartmentName'] : '';
         $product_price   = isset( $product_data['StandardPrice'] ) ? $product_data['StandardPrice'] : '';
-        //groupcode and groupname
-        $group_code1    = isset( $product_data['GroupCode1'] ) ? $product_data['GroupCode1'] : '';
-        $group_name1    = isset( $product_data['GroupName1'] ) ? $product_data['GroupName1'] : '';
-        $group_code2    = isset( $product_data['GroupCode2'] ) ? $product_data['GroupCode2'] : '';
-        $group_name2    = isset( $product_data['GroupName2'] ) ? $product_data['GroupName2'] : '';
-        $group_code3    = isset( $product_data['GroupCode3'] ) ? $product_data['GroupCode3'] : '';
-        $group_name3    = isset( $product_data['GroupName3'] ) ? $product_data['GroupName3'] : '';
-        $group_code4    = isset( $product_data['GroupCode4'] ) ? $product_data['GroupCode4'] : '';
-        $group_name4    = isset( $product_data['GroupName4'] ) ? $product_data['GroupName4'] : '';
-        $group_code5    = isset( $product_data['GroupCode5'] ) ? $product_data['GroupCode5'] : '';
-        $group_name5    = isset( $product_data['GroupName5'] ) ? $product_data['GroupName5'] : '';
-        $group_code6    = isset( $product_data['GroupCode6'] ) ? $product_data['GroupCode6'] : '';
-        $group_name6    = isset( $product_data['GroupName6'] ) ? $product_data['GroupName6'] : '';
-        $group_code7    = isset( $product_data['GroupCode7'] ) ? $product_data['GroupCode7'] : '';
-        $group_name7    = isset( $product_data['GroupName7'] ) ? $product_data['GroupName7'] : '';
-        $group_code8    = isset( $product_data['GroupCode8'] ) ? $product_data['GroupCode8'] : '';
-        $group_name8    = isset( $product_data['GroupName8'] ) ? $product_data['GroupName8'] : '';
-        $type_code      = isset( $product_data['TypeCode'] ) ? $product_data['TypeCode'] : '';
-        $valuation_code = isset( $product_data['ValuationCode'] ) ? $product_data['ValuationCode'] : '';
-        $vendor_code    = isset( $product_data['VendorCode'] ) ? $product_data['VendorCode'] : '';
-        $vendor_name    = isset( $product_data['VendorName'] ) ? $product_data['VendorName'] : '';
-        $family_code    = isset( $product_data['FamilyCode'] ) ? $product_data['FamilyCode'] : '';
-        $family_name    = isset( $product_data['FamilyName'] ) ? $product_data['FamilyName'] : '';
-        $brand_code     = isset( $product_data['BrandCode'] ) ? $product_data['BrandCode'] : '';
-        $brand_name     = isset( $product_data['BrandName'] ) ? $product_data['BrandName'] : '';
-        $model_code     = isset( $product_data['Model'] ) ? $product_data['Model'] : '';
-        $model_name     = isset( $product_data['ModelName'] ) ? $product_data['ModelName'] : '';
-        $description    = isset( $product_data['Description'] ) ? $product_data['Description'] : '';
-        $weight         = isset( $product_data['NetWeight'] ) ? $product_data['NetWeight'] : '';
-        $length         = isset( $product_data['Length'] ) ? $product_data['Length'] : '';
-        $width          = isset( $product_data['Width'] ) ? $product_data['Width'] : '';
-        $height         = isset( $product_data['Height'] ) ? $product_data['Height'] : '';
-        $volume         = isset( $product_data['Volume'] ) ? $product_data['Volume'] : '';
-        $stock          = isset( $product_data['Quantity1'] ) ? $product_data['Quantity1'] : '';
+        $type_code       = isset( $product_data['TypeCode'] ) ? $product_data['TypeCode'] : '';
+        $valuation_code  = isset( $product_data['ValuationCode'] ) ? $product_data['ValuationCode'] : '';
+        $vendor_code     = isset( $product_data['VendorCode'] ) ? $product_data['VendorCode'] : '';
+        $vendor_name     = isset( $product_data['VendorName'] ) ? $product_data['VendorName'] : '';
+        $brand_name      = isset( $product_data['BrandName'] ) ? $product_data['BrandName'] : '';
+        $model_code      = isset( $product_data['Model'] ) ? $product_data['Model'] : '';
+        $description     = isset( $product_data['Description'] ) ? $product_data['Description'] : '';
+        $weight          = isset( $product_data['NetWeight'] ) ? $product_data['NetWeight'] : '';
+        $width           = isset( $product_data['Width'] ) ? $product_data['Width'] : '';
+        $height          = isset( $product_data['Height'] ) ? $product_data['Height'] : '';
+        $stock           = isset( $product_data['Quantity1'] ) ? $product_data['Quantity1'] : '';
 
 
         // Set up the API client with your WooCommerce store URL and credentials
@@ -115,14 +91,8 @@ function products_insert_woocommerce_callback() {
                 'sku'           => $product_code,
                 'type'          => 'simple',
                 'description'   => $description,
-                'regular_price' => $product_price, // Replace 'RegularPrice' with the actual key from your $product_data
-                'attributes'    => [
-                    [
-                        'name'      => 'Dimensions',
-                        'visible'   => true,
-                        'variation' => true,
-                    ],
-                ],
+                'regular_price' => $product_price,
+                'attributes'    => [],
             ];
 
             // update product
@@ -141,14 +111,8 @@ function products_insert_woocommerce_callback() {
                 'sku'           => $product_code,
                 'type'          => 'simple',
                 'description'   => $description,
-                'regular_price' => $product_price, // Replace 'RegularPrice' with the actual key from your $product_data
-                'attributes'    => [
-                    [
-                        'name'      => 'Dimensions',
-                        'visible'   => true,
-                        'variation' => true,
-                    ],
-                ],
+                'regular_price' => $product_price,
+                'attributes'    => [],
             ];
 
             // Create the product
@@ -165,18 +129,12 @@ function products_insert_woocommerce_callback() {
         update_post_meta( $product_id, '_ValuationCode', $valuation_code );
         update_post_meta( $product_id, '_VendorCode', $vendor_code );
         update_post_meta( $product_id, '_VendorName', $vendor_name );
-        update_post_meta( $product_id, '_Color', $color );
-        update_post_meta( $product_id, '_Size', $size );
-        update_post_meta( $product_id, '_Style', $style );
-        update_post_meta( $product_id, '_BrandCode', $barcode );
         update_post_meta( $product_id, '_Model', $model_code );
-        update_post_meta( $product_id, '_Pack', $pack );
-        wp_set_object_terms( $product_id, $category, 'product_cat' );
 
         // Set the short description
         $short_description =
             '<h3>Details</h3> <br>'
-            . '<p>Brand : ' . $barcode . '</p>'
+            . '<p>Brand : ' . $brand_name . '</p>'
             . '<p>Type : ' . $type_code . '</p>'
             . '<p>Color : ' . $color . '</p>'
             . '<br>' . '<br>'
@@ -197,7 +155,7 @@ function products_insert_woocommerce_callback() {
         //Update product meta data in WordPress
         update_post_meta( $product_id, '_stock', $stock );
 
-        // //display out of stock message if stock is 0
+        //display out of stock message if stock is 0
         update_post_meta( $product_id, '_manage_stock', 'yes' );
 
         if ( $stock <= 0 ) {
