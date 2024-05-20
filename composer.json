@@ -1,0 +1,6 @@
+{
+    "require": {
+        "automattic/woocommerce": "^3.1",
+        "halaxa/json-machine": "^1.1"
+    }
+}
