@@ -19,7 +19,7 @@ function fetch_data_from_api() {
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST  => 'GET',
-            CURLOPT_POSTFIELDS     => 'tkn=71C0BEF4-BF21-4CDC-99E8-EBB9507A5E05&cmd=get&com=001&tbl=IM_Products_Products_Per_Warehouse_View&crs=LIKE&cdn=AND&rst=jso',
+            CURLOPT_POSTFIELDS     => 'tkn=B47C96DB-8855-4A18-ACDE-925249B6DDEF&cmd=get&com=001&tbl=IM_Products_Products_Per_Warehouse_View&crs=LIKE&cdn=AND&rst=jso&s1=ProductCode&v1=&s2=Web&v2=false&p1=StandardPrice&c1=%3E&f1=0&p2=QualityOnHand&c2=%3E&f2=&WEB=1',
             CURLOPT_HTTPHEADER     => array(
                 'Content-Type: application/x-www-form-urlencoded',
             ),
@@ -41,7 +41,8 @@ function insert_products_to_db_callback() {
     $file_path = __DIR__ . '/uploads/api_data.json';
 
     // get api response
-    $api_response = fetch_data_from_api();
+    // $api_response = fetch_data_from_api();
+    // file_put_contents( $file_path, $api_response );
 
     // get items from file
     $items = Items::fromFile( $file_path );
