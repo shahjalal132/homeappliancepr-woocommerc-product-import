@@ -164,7 +164,7 @@ function products_insert_woocommerce_callback() {
             [ 'id' => $product->id ]
         );
 
-        return '<h4>product insert successfully</h4>';
+        return 'product insert successfully';
     }
 
     return ob_get_clean();
