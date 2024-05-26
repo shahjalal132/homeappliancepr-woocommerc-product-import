@@ -1,6 +1,6 @@
 i=0  # Initialize the variable i with the value 0.
 
-while [ $i -le 500 ]  # Start a while loop that continues as long as i is less than or equal to 1000.
+while [ $i -le 210 ]  # Start a while loop that continues as long as i is less than or equal to 1000.
 do
     i=$(($i+1))  # Increment the value of i by 1.
 
