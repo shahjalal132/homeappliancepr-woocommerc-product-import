@@ -36,3 +36,4 @@ require_once HA_PLUGIN_PATH . '/inc/ha_products_insert_woocommerce.php';
 
 // Create wp_sync_products db table when plugin activate
 register_activation_hook( __FILE__, 'ha_aswspr_products_table_create' );
+register_activation_hook( __FILE__, 'ha_aswspr_product_codes_table_create' );
