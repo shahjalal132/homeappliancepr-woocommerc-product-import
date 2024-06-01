@@ -13,14 +13,23 @@ function products_insert_woocommerce_callback() {
 
     // Define table names
     $table_name_products = $wpdb->prefix . 'sync_products';
+    $table_name_images   = $wpdb->prefix . 'sync_product_images';
+
+    // SQL query
+    $sql = "SELECT  p.id , p.product_code , p.product_data , p.status , i.product_images FROM $table_name_products p LEFT JOIN $table_name_images i ON p.product_code = i.product_code WHERE status = 'pending' limit 1";
 
     // Retrieve pending products from the database
-    $products = $wpdb->get_results( "SELECT * FROM $table_name_products WHERE status = 'pending' LIMIT 1" );
+    $products = $wpdb->get_results( $wpdb->prepare( $sql ) );
 
     // Loop through each pending product
     foreach ( $products as $product ) {
 
-        $product_data = json_decode( $product->operation_value, true );
+        // extract product images
+        $images = $product->product_images ?? '';
+        $images = json_decode( $images, true );
+
+        // Extract product details from the decoded data
+        $product_data = json_decode( $product->product_data, true );
 
         //woocommerce store information
         $website_url     = home_url();
@@ -54,6 +63,9 @@ function products_insert_woocommerce_callback() {
             $consumer_secret,
             [
                 'verify_ssl' => false,
+                'wp_api'     => true,
+                'version'    => 'wc/v3',
+                'timeout'    => 400,
             ]
         );
 
@@ -76,7 +88,7 @@ function products_insert_woocommerce_callback() {
             $existing_products->the_post();
 
             // get product id
-            $product_id = get_the_ID();
+            $_product_id = get_the_ID();
 
             // Update the status of the processed product in your database
             $wpdb->update(
@@ -87,82 +99,127 @@ function products_insert_woocommerce_callback() {
 
             // Update the product
             $product_data = [
-                'name'          => $product_name,
-                'sku'           => $product_code,
-                'type'          => 'simple',
-                'description'   => $description,
-                'regular_price' => $product_price,
-                'attributes'    => [],
+                'name'        => "$product_name",
+                'sku'         => "$product_code",
+                'type'        => 'simple',
+                'description' => "$description",
+                'attributes'  => [],
             ];
 
             // update product
-            $client->put( 'products/' . $product_id, $product_data );
+            $client->put( 'products/' . $_product_id, $product_data );
+
+            return "Product Updated";
+
         } else {
 
             // Create a new product
-            $product_data = [
-                'name'          => $product_name,
-                'sku'           => $product_code,
-                'type'          => 'simple',
-                'description'   => $description,
-                'regular_price' => $product_price,
-                'attributes'    => [],
+            $_product_data = [
+                'name'        => "$product_name",
+                'sku'         => "$product_code",
+                'type'        => 'simple',
+                'description' => "$description",
+                'attributes'  => [],
             ];
 
             // Create the product
-            $product    = $client->post( 'products', $product_data );
-            $product_id = $product->id;
+            $_product   = $client->post( 'products', $_product_data );
+            $product_id = $_product->id;
+
+            $wpdb->update(
+                $table_name_products,
+                [ 'status' => 'completed' ],
+                [ 'id' => $product->id ]
+            );
+
+            // Update product meta data
+            update_post_meta( $product_id, '_regular_price', $product_price );
+            update_post_meta( $product_id, '_price', $product_price );
+
+            // Set the short description
+            $short_description =
+                '<h3>Details</h3> <br>'
+                . '<p>Brand : ' . $brand_name . '</p>'
+                . '<p>Type : ' . $type_code . '</p>'
+                . '<p>Color : ' . $color . '</p>'
+                . '<br>' . '<br>'
+                . '<h3>Dimensions</h3> <br>'
+                . '<p>Width : ' . $width . '</p>'
+                . '<p>Height : ' . $height . '</p>'
+                . '<p>Weight : ' . $weight . '</p>'
+            ;
+
+            // Update the product
+            $_args = array(
+                'ID'           => $product_id,
+                'post_excerpt' => $short_description,
+            );
+
+            wp_update_post( $_args );
+
+            //Update product meta data in WordPress
+            update_post_meta( $product_id, '_stock', $stock );
+
+            //display out of stock message if stock is 0
+            update_post_meta( $product_id, '_manage_stock', 'yes' );
+
+            if ( $stock <= 0 ) {
+                update_post_meta( $product_id, '_stock_status', 'outofstock' );
+            } else {
+                update_post_meta( $product_id, '_stock_status', 'instock' );
+            }
+
+            // Set product images
+            if ( !empty( $images ) && is_array( $images ) ) {
+                foreach ( $images as $image_url ) {
+
+                    // Extract the image name from the URL
+                    $image_name = basename( $image_url );
+
+                    // Get WordPress upload directory
+                    $upload_dir = wp_upload_dir();
+
+                    // Download the image from the URL and save it to the upload directory
+                    $image_data = file_get_contents( $image_url );
+
+                    $image_file = $upload_dir['path'] . '/' . $image_name;
+                    file_put_contents( $image_file, $image_data );
+
+                    // Prepare image data to be attached to the product
+                    $file_path = $upload_dir['path'] . '/' . $image_name;
+                    $file_name = basename( $file_path );
+
+                    // Define the attachment details
+                    $attachment = [
+                        'post_mime_type' => mime_content_type( $file_path ),
+                        'post_title'     => preg_replace( '/\.[^.]+$/', '', $file_name ),
+                        'post_content'   => '',
+                        'post_status'    => 'inherit',
+                    ];
+
+                    // Insert the image as an attachment
+                    $attach_id = wp_insert_attachment( $attachment, $file_path, $product_id );
+
+                    // Add image to the product gallery
+                    if ( $attach_id && !is_wp_error( $attach_id ) ) {
+
+                        // Set the product image (thumbnail)
+                        set_post_thumbnail( $product_id, $attach_id );
+
+                        // Set gallery
+                        $gallery_ids = get_post_meta( $product_id, '_product_image_gallery', true );
+                        $gallery_ids = explode( ',', $gallery_ids );
+
+                        // Add the new image to the existing gallery
+                        $gallery_ids[] = $attach_id;
+
+                        // Update the product gallery
+                        update_post_meta( $product_id, '_product_image_gallery', implode( ',', $gallery_ids ) );
+                    }
+                }
+            }
+
         }
-
-        // Update product meta data
-        update_post_meta( $product_id, '_sku', $product_code );
-        update_post_meta( $product_id, '_regular_price', $product_price );
-        update_post_meta( $product_id, '_price', $product_price );
-        update_post_meta( $product_id, '_DepartmentCode', $department_code );
-        update_post_meta( $product_id, '_DepartmentName', $department_name );
-        update_post_meta( $product_id, '_ValuationCode', $valuation_code );
-        update_post_meta( $product_id, '_VendorCode', $vendor_code );
-        update_post_meta( $product_id, '_VendorName', $vendor_name );
-        update_post_meta( $product_id, '_Model', $model_code );
-
-        // Set the short description
-        $short_description =
-            '<h3>Details</h3> <br>'
-            . '<p>Brand : ' . $brand_name . '</p>'
-            . '<p>Type : ' . $type_code . '</p>'
-            . '<p>Color : ' . $color . '</p>'
-            . '<br>' . '<br>'
-            . '<h3>Dimensions</h3> <br>'
-            . '<p>Width : ' . $width . '</p>'
-            . '<p>Height : ' . $height . '</p>'
-            . '<p>Weight : ' . $weight . '</p>'
-        ;
-
-        // Update the product
-        $args = array(
-            'ID'           => $product_id,
-            'post_excerpt' => $short_description,
-        );
-
-        wp_update_post( $args );
-
-        //Update product meta data in WordPress
-        update_post_meta( $product_id, '_stock', $stock );
-
-        //display out of stock message if stock is 0
-        update_post_meta( $product_id, '_manage_stock', 'yes' );
-
-        if ( $stock <= 0 ) {
-            update_post_meta( $product_id, '_stock_status', 'outofstock' );
-        } else {
-            update_post_meta( $product_id, '_stock_status', 'instock' );
-        }
-
-        $wpdb->update(
-            $table_name_products,
-            [ 'status' => 'completed' ],
-            [ 'id' => $product->id ]
-        );
 
         return 'product insert successfully';
     }
