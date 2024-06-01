@@ -7,10 +7,6 @@ namespace Composer\Autoload;
 class ComposerStaticInitcd53d4cc421fe0b70226223f299ac0ad
 {
     public static $prefixLengthsPsr4 = array (
-        'J' => 
-        array (
-            'JsonMachine\\' => 12,
-        ),
         'A' => 
         array (
             'Automattic\\WooCommerce\\' => 23,
@@ -18,10 +14,6 @@ class ComposerStaticInitcd53d4cc421fe0b70226223f299ac0ad
     );
 
     public static $prefixDirsPsr4 = array (
-        'JsonMachine\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/halaxa/json-machine/src',
-        ),
         'Automattic\\WooCommerce\\' => 
         array (
             0 => __DIR__ . '/..' . '/automattic/woocommerce/src/WooCommerce',
