@@ -21,8 +21,8 @@ if ( !defined( 'HA_PLUGIN_PATH' ) ) {
 }
 
 // Define plugin uri
-if ( !defined( 'HA_PLUGIN_PATH' ) ) {
-    define( 'HA_PLUGIN_PATH', untrailingslashit( plugin_dir_url( __FILE__ ) ) );
+if ( !defined( 'HA_PLUGIN_URL' ) ) {
+    define( 'HA_PLUGIN_URL', untrailingslashit( plugin_dir_url( __FILE__ ) ) );
 }
 
 
@@ -32,8 +32,10 @@ require_once HA_PLUGIN_PATH . '/inc/api_endpoints.php';
 require_once HA_PLUGIN_PATH . '/inc/ha_aswspr_product_db.php';
 require_once HA_PLUGIN_PATH . '/inc/aswspr_add_products_insert_db.php';
 require_once HA_PLUGIN_PATH . '/inc/ha_products_insert_woocommerce.php';
+require_once HA_PLUGIN_PATH . '/inc/get_product_images.php';
 
 
 // Create wp_sync_products db table when plugin activate
 register_activation_hook( __FILE__, 'ha_aswspr_products_table_create' );
 register_activation_hook( __FILE__, 'ha_aswspr_product_codes_table_create' );
+register_activation_hook( __FILE__, 'ha_aswspr_product_images_table_create' );

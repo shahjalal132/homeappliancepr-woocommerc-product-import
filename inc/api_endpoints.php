@@ -41,6 +41,18 @@ function coaster_products_api() {
         'callback' => 'product_code_insert_to_db',
     ] );
 
+    // Sync Products to WooCommerce
+    register_rest_route( 'homeappliancepr/v1', '/get-product-codes', [
+        'methods'  => 'GET',
+        'callback' => 'get_product_codes_callback',
+    ] );
+
+    // Sync Products to WooCommerce
+    register_rest_route( 'homeappliancepr/v1', '/get-product-image', [
+        'methods'  => 'GET',
+        'callback' => 'get_product_image_callback',
+    ] );
+
 }
 
 function homeappliancepr_api_test() {
@@ -65,4 +77,12 @@ function product_insert_to_db() {
 
 function product_code_insert_to_db() {
     return insert_product_codes_db();
+}
+
+function get_product_codes_callback() {
+    return get_product_codes();
+}
+
+function get_product_image_callback() {
+    return get_product_images();
 }

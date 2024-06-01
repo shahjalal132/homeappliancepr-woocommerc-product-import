@@ -63,3 +63,24 @@ function ha_aswspr_product_codes_table_remove() {
     $wpdb->query( $sql );
 
 }
+
+function ha_aswspr_product_images_table_create() {
+
+    global $wpdb;
+
+    $table_name      = $wpdb->prefix . 'sync_product_images';
+    $charset_collate = $wpdb->get_charset_collate();
+
+    $sql = "CREATE TABLE IF NOT EXISTS $table_name (
+        id INT AUTO_INCREMENT,
+        product_code VARCHAR(255) NULL, 
+        product_images TEXT NULL, 
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+        PRIMARY KEY (id)
+    ) $charset_collate;";
+
+    require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+    dbDelta( $sql );
+}
