@@ -30,7 +30,7 @@ function coaster_products_api() {
     ] );
 
     // Sync Products to WooCommerce
-    register_rest_route( 'homeappliancepr/v1', '/insert-product', [
+    register_rest_route( 'homeappliancepr/v1', '/insert-products', [
         'methods'  => 'GET',
         'callback' => 'product_insert_to_db',
     ] );
