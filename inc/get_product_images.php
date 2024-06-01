@@ -1,12 +1,17 @@
 <?php
 
-// Function to get product codes from the database
-function get_product_codes() {
+// Function to get product codes from the database with offset and limit
+function get_product_codes( $offset, $limit ) {
     global $wpdb;
     $table_name = $wpdb->prefix . 'sync_product_codes';
 
-    // Get product codes from the table
-    $product_codes_results = $wpdb->get_results( "SELECT product_code FROM $table_name LIMIT 10" );
+    // Get product codes from the table with limit and offset
+    $product_codes_results = $wpdb->get_results( $wpdb->prepare(
+        "SELECT product_code FROM $table_name LIMIT %d OFFSET %d",
+        $limit,
+        $offset
+    )
+    );
 
     // Extract product codes into a simple array
     $product_codes = array_map( function ($item) {
@@ -15,12 +20,16 @@ function get_product_codes() {
 
     return $product_codes;
 }
-// add_shortcode('show_product_codes', 'get_product_codes');
 
 // Function to get product images by code and insert them into the database
 function get_product_image_by_code() {
-    // Get product codes
-    $product_codes = get_product_codes();
+
+    // Set the limit and offset
+    $limit  = 10;
+    $offset = isset( $_GET['offset'] ) ? intval( $_GET['offset'] ) : 0;
+
+    // Get product codes with the current offset
+    $product_codes = get_product_codes( $offset, $limit );
 
     // Base URL for images
     $base_url = "https://ha.aswspr.com/Documents/001/IM/%s/Images/%d.jpg";
@@ -58,9 +67,18 @@ function get_product_image_by_code() {
                 echo "No images found for product code: $product_code<br>";
             }
         }
+
+        // Redirect to process the next batch of product codes
+        $next_offset = $offset + $limit;
+        echo '<script type="text/javascript">
+                setTimeout(function(){
+                    window.location.href = "?offset=' . $next_offset . '";
+                }, 1200);
+              </script>';
+    } else {
+        echo "All product codes have been processed.";
     }
 }
-
 add_shortcode('show_product_image', 'get_product_image_by_code');
 
 // Function to insert product images into the database
