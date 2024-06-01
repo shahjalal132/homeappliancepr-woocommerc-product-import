@@ -1,15 +1,9 @@
 <?php
 
-require_once HA_PLUGIN_PATH . '/vendor/autoload.php';
-
-use \JsonMachine\Items;
-
 // TRUNCATE Table
 function truncate_table( $table_name ) {
-
     global $wpdb;
     $wpdb->query( "TRUNCATE TABLE $table_name" );
-
 }
 
 function fetch_data_from_api() {
@@ -53,24 +47,28 @@ function insert_products_to_db_callback() {
     // file_put_contents( $file_path, $api_response );
 
     // get items from file
-    $items = Items::fromFile( $file_path );
+    $products = file_get_contents( $file_path );
+    $products = json_decode( $products, true );
 
     global $wpdb;
     $table_name = $wpdb->prefix . 'sync_products';
     truncate_table( $table_name );
 
     // Insert to database
-    foreach ( $items as $item ) {
+    foreach ( $products as $product ) {
+
+        // extract product code
+        $product_code = $product['ProductCode'];
 
         // convert to json
-        $json_data = json_encode( $item );
+        $json_data = json_encode( $product );
 
         $wpdb->insert(
             $table_name,
             [
-                'operation_type'  => 'product_create',
-                'operation_value' => $json_data,
-                'status'          => 'pending',
+                'product_code' => $product_code,
+                'product_data' => $json_data,
+                'status'       => 'pending',
             ]
         );
     }
@@ -79,8 +77,7 @@ function insert_products_to_db_callback() {
 
     return ob_get_clean();
 }
-
-add_shortcode( 'insert_product_api', 'insert_products_to_db_callback' );
+// add_shortcode( 'insert_product_api', 'insert_products_to_db_callback' );
 
 
 // insert product codes to db
