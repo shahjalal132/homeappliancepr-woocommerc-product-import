@@ -3,12 +3,12 @@
 /*
  * Plugin Name:       Aswspr Product API
  * Plugin URI:        https://ha.aswspr.com
- * Description:       aswspr product api
+ * Description:       WooCommerce Product import from external api
  * Version:           1.0.0
  * Requires at least: 5.2
  * Requires PHP:      7.2
- * Author:            Imjol
- * Author URI:        https://imjol.com/
+ * Author:            Shah jalal
+ * Author URI:        #
  */
 
 if ( !defined( 'WPINC' ) ) {
