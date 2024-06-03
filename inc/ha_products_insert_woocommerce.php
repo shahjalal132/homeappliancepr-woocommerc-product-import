@@ -37,23 +37,17 @@ function products_insert_woocommerce_callback() {
         $consumer_secret = 'cs_60723c6f2b6456a6b0b8a8172119ec554a282aed';
 
         // Extract product details from the decoded data
-        $product_code    = isset( $product_data['ProductCode'] ) ? $product_data['ProductCode'] : '';
-        $color           = isset( $product_data['Color'] ) ? $product_data['Color'] : '';
-        $product_name    = isset( $product_data['ProductName'] ) ? $product_data['ProductName'] : '';
-        $department_code = isset( $product_data['DepartmentCode'] ) ? $product_data['DepartmentCode'] : '';
-        $department_name = isset( $product_data['DepartmentName'] ) ? $product_data['DepartmentName'] : '';
-        $product_price   = isset( $product_data['StandardPrice'] ) ? $product_data['StandardPrice'] : '';
-        $type_code       = isset( $product_data['TypeCode'] ) ? $product_data['TypeCode'] : '';
-        $valuation_code  = isset( $product_data['ValuationCode'] ) ? $product_data['ValuationCode'] : '';
-        $vendor_code     = isset( $product_data['VendorCode'] ) ? $product_data['VendorCode'] : '';
-        $vendor_name     = isset( $product_data['VendorName'] ) ? $product_data['VendorName'] : '';
-        $brand_name      = isset( $product_data['BrandName'] ) ? $product_data['BrandName'] : '';
-        $model_code      = isset( $product_data['Model'] ) ? $product_data['Model'] : '';
-        $description     = isset( $product_data['Description'] ) ? $product_data['Description'] : '';
-        $weight          = isset( $product_data['NetWeight'] ) ? $product_data['NetWeight'] : '';
-        $width           = isset( $product_data['Width'] ) ? $product_data['Width'] : '';
-        $height          = isset( $product_data['Height'] ) ? $product_data['Height'] : '';
-        $stock           = isset( $product_data['Quantity1'] ) ? $product_data['Quantity1'] : '';
+        $product_code  = isset( $product_data['ProductCode'] ) ? $product_data['ProductCode'] : '';
+        $color         = isset( $product_data['Color'] ) ? $product_data['Color'] : '';
+        $product_name  = isset( $product_data['ProductName'] ) ? $product_data['ProductName'] : '';
+        $product_price = isset( $product_data['StandardPrice'] ) ? $product_data['StandardPrice'] : '';
+        $type_code     = isset( $product_data['TypeCode'] ) ? $product_data['TypeCode'] : '';
+        $brand_name    = isset( $product_data['BrandName'] ) ? $product_data['BrandName'] : '';
+        $description   = isset( $product_data['Description'] ) ? $product_data['Description'] : '';
+        $weight        = isset( $product_data['NetWeight'] ) ? $product_data['NetWeight'] : '';
+        $width         = isset( $product_data['Width'] ) ? $product_data['Width'] : '';
+        $height        = isset( $product_data['Height'] ) ? $product_data['Height'] : '';
+        $stock         = isset( $product_data['Quantity1'] ) ? $product_data['Quantity1'] : '';
 
 
         // Set up the API client with your WooCommerce store URL and credentials
@@ -108,6 +102,11 @@ function products_insert_woocommerce_callback() {
 
             // update product
             $client->put( 'products/' . $_product_id, $product_data );
+
+            // set product images
+            if ( $images ) {
+                set_product_images( $_product_id, $images );
+            }
 
             return "Product Updated";
 
@@ -170,54 +169,7 @@ function products_insert_woocommerce_callback() {
             }
 
             // Set product images
-            if ( !empty( $images ) && is_array( $images ) ) {
-                foreach ( $images as $image_url ) {
-
-                    // Extract the image name from the URL
-                    $image_name = basename( $image_url );
-
-                    // Get WordPress upload directory
-                    $upload_dir = wp_upload_dir();
-
-                    // Download the image from the URL and save it to the upload directory
-                    $image_data = file_get_contents( $image_url );
-
-                    $image_file = $upload_dir['path'] . '/' . $image_name;
-                    file_put_contents( $image_file, $image_data );
-
-                    // Prepare image data to be attached to the product
-                    $file_path = $upload_dir['path'] . '/' . $image_name;
-                    $file_name = basename( $file_path );
-
-                    // Define the attachment details
-                    $attachment = [
-                        'post_mime_type' => mime_content_type( $file_path ),
-                        'post_title'     => preg_replace( '/\.[^.]+$/', '', $file_name ),
-                        'post_content'   => '',
-                        'post_status'    => 'inherit',
-                    ];
-
-                    // Insert the image as an attachment
-                    $attach_id = wp_insert_attachment( $attachment, $file_path, $product_id );
-
-                    // Add image to the product gallery
-                    if ( $attach_id && !is_wp_error( $attach_id ) ) {
-
-                        // Set the product image (thumbnail)
-                        set_post_thumbnail( $product_id, $attach_id );
-
-                        // Set gallery
-                        $gallery_ids = get_post_meta( $product_id, '_product_image_gallery', true );
-                        $gallery_ids = explode( ',', $gallery_ids );
-
-                        // Add the new image to the existing gallery
-                        $gallery_ids[] = $attach_id;
-
-                        // Update the product gallery
-                        update_post_meta( $product_id, '_product_image_gallery', implode( ',', $gallery_ids ) );
-                    }
-                }
-            }
+            set_product_images( $product_id, $images );
 
         }
 
@@ -227,3 +179,59 @@ function products_insert_woocommerce_callback() {
     return ob_get_clean();
 }
 add_shortcode( 'products_insert_woocommerce', 'products_insert_woocommerce_callback' );
+
+
+/**
+ * set product images
+ */
+
+function set_product_images( $product_id, $images ) {
+    if ( !empty( $images ) && is_array( $images ) ) {
+        foreach ( $images as $image_url ) {
+
+            // Extract the image name from the URL
+            $image_name = basename( $image_url );
+
+            // Get WordPress upload directory
+            $upload_dir = wp_upload_dir();
+
+            // Download the image from the URL and save it to the upload directory
+            $image_data = file_get_contents( $image_url );
+
+            $image_file = $upload_dir['path'] . '/' . $image_name;
+            file_put_contents( $image_file, $image_data );
+
+            // Prepare image data to be attached to the product
+            $file_path = $upload_dir['path'] . '/' . $image_name;
+            $file_name = basename( $file_path );
+
+            // Define the attachment details
+            $attachment = [
+                'post_mime_type' => mime_content_type( $file_path ),
+                'post_title'     => preg_replace( '/\.[^.]+$/', '', $file_name ),
+                'post_content'   => '',
+                'post_status'    => 'inherit',
+            ];
+
+            // Insert the image as an attachment
+            $attach_id = wp_insert_attachment( $attachment, $file_path, $product_id );
+
+            // Add image to the product gallery
+            if ( $attach_id && !is_wp_error( $attach_id ) ) {
+
+                // Set the product image (thumbnail)
+                set_post_thumbnail( $product_id, $attach_id );
+
+                // Set gallery
+                $gallery_ids = get_post_meta( $product_id, '_product_image_gallery', true );
+                $gallery_ids = explode( ',', $gallery_ids );
+
+                // Add the new image to the existing gallery
+                $gallery_ids[] = $attach_id;
+
+                // Update the product gallery
+                update_post_meta( $product_id, '_product_image_gallery', implode( ',', $gallery_ids ) );
+            }
+        }
+    }
+}
