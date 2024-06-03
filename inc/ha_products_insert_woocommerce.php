@@ -169,7 +169,9 @@ function products_insert_woocommerce_callback() {
             }
 
             // Set product images
-            set_product_images( $product_id, $images );
+            if ( $images ) {
+                set_product_images( $product_id, $images );
+            }
 
         }
 
