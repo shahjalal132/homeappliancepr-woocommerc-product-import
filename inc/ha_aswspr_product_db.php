@@ -73,7 +73,7 @@ function ha_aswspr_product_images_table_create() {
 
     $sql = "CREATE TABLE IF NOT EXISTS $table_name (
         id INT AUTO_INCREMENT,
-        product_code VARCHAR(255) NULL, 
+        product_code VARCHAR(255) UNIQUE NULL, 
         product_images TEXT NULL, 
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

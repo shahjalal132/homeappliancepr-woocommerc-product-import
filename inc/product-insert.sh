@@ -1,6 +1,6 @@
 i=0
 
-while [ $i -le 50 ]
+while [ $i -le 2340 ]
 do
     i=$(($i+1))  # Increment the value of i by 1.
 
