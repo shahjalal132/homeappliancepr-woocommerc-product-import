@@ -32,7 +32,6 @@ function ha_aswspr_products_table_remove() {
     $wpdb->query( $sql );
 }
 
-
 function ha_aswspr_product_codes_table_create() {
 
     global $wpdb;
@@ -83,4 +82,13 @@ function ha_aswspr_product_images_table_create() {
 
     require_once ABSPATH . 'wp-admin/includes/upgrade.php';
     dbDelta( $sql );
+}
+
+function ha_aswspr_product_images_table_remove() {
+
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'sync_product_images';
+    $sql        = "DROP TABLE IF EXISTS $table_name;";
+    $wpdb->query( $sql );
+
 }

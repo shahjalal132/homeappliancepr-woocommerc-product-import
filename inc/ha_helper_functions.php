@@ -47,3 +47,37 @@ function delete_all_trashed_woocommerce_products() {
 }
 // Add a shortcode 'delete_products_from_trash' that triggers the function
 add_shortcode( 'delete_products_from_trash', 'delete_all_trashed_woocommerce_products' );
+
+
+/**
+ * Truncate table
+ *
+ * @return void
+ */
+function truncate_table_callback() {
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'sync_product_images';
+    $wpdb->query( "TRUNCATE TABLE $table_name" );
+}
+
+add_shortcode( 'truncate_table', 'truncate_table_callback' );
+
+/**
+ * get_images_data
+ *
+ * @return void
+ */
+function get_images_data_callback() {
+
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'sync_product_images';
+    // $sql        = "SELECT * FROM $table_name";
+    $sql    = "SELECT COUNT(*) FROM $table_name";
+    $result = $wpdb->get_results( $sql );
+
+    echo '<pre>';
+    print_r( $result );
+    echo '</pre>';
+}
+
+add_shortcode( 'get_images_data', 'get_images_data_callback' );
