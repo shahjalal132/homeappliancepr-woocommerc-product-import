@@ -81,3 +81,56 @@ function get_images_data_callback() {
 }
 
 add_shortcode( 'get_images_data', 'get_images_data_callback' );
+
+/**
+ * get pending products
+ */
+function get_pending_products_callback() {
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'sync_products';
+    $sql        = "SELECT COUNT(*) FROM $table_name WHERE status = 'pending'";
+    $result     = $wpdb->get_results( $sql );
+
+    var_dump( $result );
+}
+
+add_shortcode( 'get_pending_products', 'get_pending_products_callback' );
+
+
+/**
+ * get completed product  to verify product image set successfully
+ */
+function get_completed_products_callback() {
+
+    global $wpdb;
+    $table_name_products = $wpdb->prefix . 'sync_products';
+    $table_name_images   = $wpdb->prefix . 'sync_product_images';
+
+    // SQL query
+    $sql = "SELECT  p.id , p.product_code , p.product_data , p.status , i.product_images FROM $table_name_products p LEFT JOIN $table_name_images i ON p.product_code = i.product_code WHERE status = 'completed' limit 1";
+
+    // Retrieve pending products from the database
+    $products = $wpdb->get_results( $wpdb->prepare( $sql ) );
+
+    echo '<pre>';
+    print_r( $products );
+    echo '</pre>';
+}
+
+add_shortcode( 'get_completed_products', 'get_completed_products_callback' );
+
+/**
+ * get attached image products
+ */
+function get_attached_images_callback() {
+
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'postmeta';
+    $sql        = "SELECT COUNT(*) FROM $table_name wp WHERE wp.meta_key LIKE '%_thumbnail_id%'";
+    $result     = $wpdb->get_results( $wpdb->prepare( $sql ) );
+    echo '<pre>';
+    print_r( $result );
+    echo '</pre>';
+}
+
+add_shortcode( 'get_attached_image_products', 'get_attached_images_callback' );
