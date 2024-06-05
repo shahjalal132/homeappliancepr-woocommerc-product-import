@@ -33,6 +33,7 @@ require_once HA_PLUGIN_PATH . '/inc/ha_aswspr_product_db.php';
 require_once HA_PLUGIN_PATH . '/inc/aswspr_add_products_insert_db.php';
 require_once HA_PLUGIN_PATH . '/inc/ha_products_insert_woocommerce.php';
 require_once HA_PLUGIN_PATH . '/inc/get_product_images.php';
+require_once HA_PLUGIN_PATH . '/inc/delete_media.php';
 
 
 // Create wp_sync_products db table when plugin activate

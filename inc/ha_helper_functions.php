@@ -134,3 +134,14 @@ function get_attached_images_callback() {
 }
 
 add_shortcode( 'get_attached_image_products', 'get_attached_images_callback' );
+
+function dd( $value ) {
+    var_dump( $value );
+    die();
+}
+
+function pd( $value ) {
+    echo '<pre>';
+    print_r( $value );
+    die();
+}

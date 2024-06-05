@@ -84,13 +84,6 @@ function products_insert_woocommerce_callback() {
             // get product id
             $_product_id = get_the_ID();
 
-            // Update the status of the processed product in your database
-            $wpdb->update(
-                $table_name_products,
-                [ 'status' => 'completed' ],
-                [ 'id' => $product->id ]
-            );
-
             // Update the product
             $product_data = [
                 'name'        => "$product_name",
@@ -104,9 +97,54 @@ function products_insert_woocommerce_callback() {
             $client->put( 'products/' . $_product_id, $product_data );
 
             // set product images
-            if ( $images ) {
-                set_product_images( $_product_id, $images );
+            if ( !empty( $images ) && is_array( $images ) ) {
+                foreach ( $images as $image_url ) {
+
+                    // Extract image name
+                    $image_name = basename( $image_url );
+                    // Get WordPress upload directory
+                    $upload_dir = wp_upload_dir();
+
+                    // Download the image from URL and save it to the upload directory
+                    $image_data = file_get_contents( $image_url );
+
+                    if ( $image_data !== false ) {
+                        $image_file = $upload_dir['path'] . '/' . $image_name;
+                        file_put_contents( $image_file, $image_data );
+
+                        // Prepare image data to be attached to the product
+                        $file_path = $upload_dir['path'] . '/' . $image_name;
+                        $file_name = basename( $file_path );
+
+                        // Insert the image as an attachment
+                        $attachment = [
+                            'post_mime_type' => mime_content_type( $file_path ),
+                            'post_title'     => preg_replace( '/\.[^.]+$/', '', $file_name ),
+                            'post_content'   => '',
+                            'post_status'    => 'inherit',
+                        ];
+
+                        $attach_id = wp_insert_attachment( $attachment, $file_path, $_product_id );
+
+                        // Add the image to the product gallery
+                        $gallery_ids   = get_post_meta( $_product_id, '_product_image_gallery', true );
+                        $gallery_ids   = explode( ',', $gallery_ids );
+                        $gallery_ids[] = $attach_id;
+                        update_post_meta( $_product_id, '_product_image_gallery', implode( ',', $gallery_ids ) );
+
+                        set_post_thumbnail( $_product_id, $attach_id );
+
+                    }
+
+                }
             }
+
+            // Update the status of the processed product in your database
+            $wpdb->update(
+                $table_name_products,
+                [ 'status' => 'completed' ],
+                [ 'id' => $product->id ]
+            );
 
             return "Product Updated";
 
@@ -124,12 +162,6 @@ function products_insert_woocommerce_callback() {
             // Create the product
             $_product   = $client->post( 'products', $_product_data );
             $product_id = $_product->id;
-
-            $wpdb->update(
-                $table_name_products,
-                [ 'status' => 'completed' ],
-                [ 'id' => $product->id ]
-            );
 
             // Update product meta data
             update_post_meta( $product_id, '_regular_price', $product_price );
@@ -169,9 +201,53 @@ function products_insert_woocommerce_callback() {
             }
 
             // Set product images
-            if ( $images ) {
-                set_product_images( $product_id, $images );
+            if ( !empty( $images ) && is_array( $images ) ) {
+                foreach ( $images as $image_url ) {
+
+                    // Extract image name
+                    $image_name = basename( $image_url );
+                    // Get WordPress upload directory
+                    $upload_dir = wp_upload_dir();
+
+                    // Download the image from URL and save it to the upload directory
+                    $image_data = file_get_contents( $image_url );
+
+                    if ( $image_data !== false ) {
+                        $image_file = $upload_dir['path'] . '/' . $image_name;
+                        file_put_contents( $image_file, $image_data );
+
+                        // Prepare image data to be attached to the product
+                        $file_path = $upload_dir['path'] . '/' . $image_name;
+                        $file_name = basename( $file_path );
+
+                        // Insert the image as an attachment
+                        $attachment = [
+                            'post_mime_type' => mime_content_type( $file_path ),
+                            'post_title'     => preg_replace( '/\.[^.]+$/', '', $file_name ),
+                            'post_content'   => '',
+                            'post_status'    => 'inherit',
+                        ];
+
+                        $attach_id = wp_insert_attachment( $attachment, $file_path, $product_id );
+
+                        // Add the image to the product gallery
+                        $gallery_ids   = get_post_meta( $product_id, '_product_image_gallery', true );
+                        $gallery_ids   = explode( ',', $gallery_ids );
+                        $gallery_ids[] = $attach_id;
+                        update_post_meta( $product_id, '_product_image_gallery', implode( ',', $gallery_ids ) );
+
+                        set_post_thumbnail( $product_id, $attach_id );
+
+                    }
+
+                }
             }
+
+            $wpdb->update(
+                $table_name_products,
+                [ 'status' => 'completed' ],
+                [ 'id' => $product->id ]
+            );
 
         }
 
@@ -191,49 +267,42 @@ function set_product_images( $product_id, $images ) {
     if ( !empty( $images ) && is_array( $images ) ) {
         foreach ( $images as $image_url ) {
 
-            // Extract the image name from the URL
+            // Extract image name
             $image_name = basename( $image_url );
-
             // Get WordPress upload directory
             $upload_dir = wp_upload_dir();
 
-            // Download the image from the URL and save it to the upload directory
+            // Download the image from URL and save it to the upload directory
             $image_data = file_get_contents( $image_url );
 
-            $image_file = $upload_dir['path'] . '/' . $image_name;
-            file_put_contents( $image_file, $image_data );
+            if ( $image_data !== false ) {
+                $image_file = $upload_dir['path'] . '/' . $image_name;
+                file_put_contents( $image_file, $image_data );
 
-            // Prepare image data to be attached to the product
-            $file_path = $upload_dir['path'] . '/' . $image_name;
-            $file_name = basename( $file_path );
+                // Prepare image data to be attached to the product
+                $file_path = $upload_dir['path'] . '/' . $image_name;
+                $file_name = basename( $file_path );
 
-            // Define the attachment details
-            $attachment = [
-                'post_mime_type' => mime_content_type( $file_path ),
-                'post_title'     => preg_replace( '/\.[^.]+$/', '', $file_name ),
-                'post_content'   => '',
-                'post_status'    => 'inherit',
-            ];
+                // Insert the image as an attachment
+                $attachment = [
+                    'post_mime_type' => mime_content_type( $file_path ),
+                    'post_title'     => preg_replace( '/\.[^.]+$/', '', $file_name ),
+                    'post_content'   => '',
+                    'post_status'    => 'inherit',
+                ];
 
-            // Insert the image as an attachment
-            $attach_id = wp_insert_attachment( $attachment, $file_path, $product_id );
+                $attach_id = wp_insert_attachment( $attachment, $file_path, $product_id );
 
-            // Add image to the product gallery
-            if ( $attach_id && !is_wp_error( $attach_id ) ) {
+                // Add the image to the product gallery
+                $gallery_ids   = get_post_meta( $product_id, '_product_image_gallery', true );
+                $gallery_ids   = explode( ',', $gallery_ids );
+                $gallery_ids[] = $attach_id;
+                update_post_meta( $product_id, '_product_image_gallery', implode( ',', $gallery_ids ) );
 
-                // Set the product image (thumbnail)
                 set_post_thumbnail( $product_id, $attach_id );
 
-                // Set gallery
-                $gallery_ids = get_post_meta( $product_id, '_product_image_gallery', true );
-                $gallery_ids = explode( ',', $gallery_ids );
-
-                // Add the new image to the existing gallery
-                $gallery_ids[] = $attach_id;
-
-                // Update the product gallery
-                update_post_meta( $product_id, '_product_image_gallery', implode( ',', $gallery_ids ) );
             }
+
         }
     }
 }
