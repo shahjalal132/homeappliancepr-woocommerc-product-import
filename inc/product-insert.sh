@@ -8,7 +8,7 @@ do
     echo "Adding product no: $i ..."
 
     # Make an HTTP request using curl to the specified URL with a timestamp parameter.
-    curl -X GET -H 'Cache-Control: no-store' "http://homeappliancepr.test/wp-json/homeappliancepr/v1/sync-products/?$(date +%s)" >> /dev/null
+    curl -X GET -H 'Cache-Control: no-store' "https://homeappliancepr.com/wp-json/homeappliancepr/v1/sync-products/?$(date +%s)" >> /dev/null
 
     # Print a message indicating that the ith product has been added.
     echo "$i th product Added"

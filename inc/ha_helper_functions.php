@@ -145,3 +145,47 @@ function pd( $value ) {
     print_r( $value );
     die();
 }
+
+function get_product_images_by_product_code_callback() {
+
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'sync_product_images';
+    $sql        = "SELECT product_images FROM $table_name WHERE product_code = 10314";
+    $result     = $wpdb->get_results( $wpdb->prepare( $sql ) );
+    echo '<pre>';
+    print_r( $result );
+    echo '</pre>';
+}
+
+add_shortcode( 'get_product_images_by_product_code', 'get_product_images_by_product_code_callback' );
+
+
+// update completed products status.
+function update_pending_products_callback() {
+    global $wpdb;
+
+    $table_name = $wpdb->prefix . 'sync_products';
+    $wpdb->update(
+        $table_name,
+        array( 'status' => 'pending' ), // Data to update
+        array( 'status' => 'completed' ) // WHERE clause
+    );
+
+}
+
+add_shortcode( 'update_pending_products', 'update_pending_products_callback' );
+
+// Update completed products status.
+function update_pending_products_to_completed_callback() {
+    global $wpdb;
+
+    $table_name = $wpdb->prefix . 'sync_products';
+    $wpdb->query(
+        $wpdb->prepare(
+            "UPDATE $table_name SET status = %s WHERE product_code != %d",
+            'completed', 10314
+        )
+    );
+}
+
+add_shortcode( 'update_pending_products_completed', 'update_pending_products_to_completed_callback' );
