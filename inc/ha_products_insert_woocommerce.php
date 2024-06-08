@@ -16,7 +16,7 @@ function products_insert_woocommerce_callback() {
     $table_name_images   = $wpdb->prefix . 'sync_product_images';
 
     // SQL query
-    $sql = "SELECT  p.id , p.product_code , p.product_data , p.status , i.product_images FROM $table_name_products p LEFT JOIN $table_name_images i ON p.product_code = i.product_code WHERE status = 'pending' limit 1";
+    $sql = "SELECT  p.id , p.product_code , p.product_data , p.status , i.product_images FROM $table_name_products p JOIN $table_name_images i ON p.product_code = i.product_code WHERE status = 'pending' limit 1";
 
     // Retrieve pending products from the database
     $products = $wpdb->get_results( $wpdb->prepare( $sql ) );
@@ -27,6 +27,16 @@ function products_insert_woocommerce_callback() {
         // extract product images
         $images = $product->product_images ?? '';
         $images = json_decode( $images, true );
+        $images = array_slice( $images, 0, 5 );
+
+        $serial_id = $product->id;
+        echo "\n";
+
+        echo 'Serial ID: ' . $serial_id;
+        echo "\n";
+
+        var_dump( $images );
+        echo "\n";
 
         // Extract product details from the decoded data
         $product_data = json_decode( $product->product_data, true );
@@ -37,9 +47,17 @@ function products_insert_woocommerce_callback() {
         $consumer_secret = 'cs_60723c6f2b6456a6b0b8a8172119ec554a282aed';
 
         // Extract product details from the decoded data
-        $product_code  = isset( $product_data['ProductCode'] ) ? $product_data['ProductCode'] : '';
-        $color         = isset( $product_data['Color'] ) ? $product_data['Color'] : '';
-        $product_name  = isset( $product_data['ProductName'] ) ? $product_data['ProductName'] : '';
+        $product_code = isset( $product_data['ProductCode'] ) ? $product_data['ProductCode'] : '';
+
+        echo 'Product Code: ' . $product_code;
+        echo "\n";
+
+        $color        = isset( $product_data['Color'] ) ? $product_data['Color'] : '';
+        $product_name = isset( $product_data['ProductName'] ) ? $product_data['ProductName'] : '';
+
+        echo 'Prodct Name : ' . $product_name;
+        echo "\n";
+
         $product_price = isset( $product_data['StandardPrice'] ) ? $product_data['StandardPrice'] : '';
         $type_code     = isset( $product_data['TypeCode'] ) ? $product_data['TypeCode'] : '';
         $brand_name    = isset( $product_data['BrandName'] ) ? $product_data['BrandName'] : '';
@@ -96,8 +114,14 @@ function products_insert_woocommerce_callback() {
             // update product
             $client->put( 'products/' . $_product_id, $product_data );
 
-            // set product images
-            set_product_images( $_product_id, $images );
+            // check if thumbnail image exists
+            if ( !has_post_thumbnail( $_product_id ) ) {
+                // set product images
+                set_product_images( $_product_id, $images );
+            } else {
+                echo "Thumbnail Image Already Exists\n";
+            }
+
 
             // Update the status of the processed product in your database
             $wpdb->update(
@@ -122,6 +146,12 @@ function products_insert_woocommerce_callback() {
             // Create the product
             $_product   = $client->post( 'products', $_product_data );
             $product_id = $_product->id;
+
+            $wpdb->update(
+                $table_name_products,
+                [ 'status' => 'completed' ],
+                [ 'id' => $product->id ]
+            );
 
             // Update product meta data
             update_post_meta( $product_id, '_regular_price', $product_price );
@@ -163,12 +193,6 @@ function products_insert_woocommerce_callback() {
             // Set product images
             set_product_images( $product_id, $images );
 
-            $wpdb->update(
-                $table_name_products,
-                [ 'status' => 'completed' ],
-                [ 'id' => $product->id ]
-            );
-
         }
 
         return 'product insert successfully';
@@ -185,9 +209,15 @@ add_shortcode( 'products_insert_woocommerce', 'products_insert_woocommerce_callb
 
 function set_product_images( $product_id, $images ) {
     if ( !empty( $images ) && is_array( $images ) ) {
+        $first_image = true;
+        $gallery_ids = get_post_meta( $product_id, '_product_image_gallery', true );
+        $gallery_ids = !empty( $gallery_ids ) ? explode( ',', $gallery_ids ) : [];
+
         foreach ( $images as $image_url ) {
-            // Extract image name
-            $image_name = basename( $image_url );
+            // Extract image name and generate a unique name using product_id
+            $image_name        = basename( $image_url );
+            $unique_image_name = $product_id . '-' . time() . '-' . $image_name;
+
             // Get WordPress upload directory
             $upload_dir = wp_upload_dir();
 
@@ -195,11 +225,11 @@ function set_product_images( $product_id, $images ) {
             $image_data = file_get_contents( $image_url );
 
             if ( $image_data !== false ) {
-                $image_file = $upload_dir['path'] . '/' . $image_name;
+                $image_file = $upload_dir['path'] . '/' . $unique_image_name;
                 file_put_contents( $image_file, $image_data );
 
                 // Prepare image data to be attached to the product
-                $file_path = $upload_dir['path'] . '/' . $image_name;
+                $file_path = $upload_dir['path'] . '/' . $unique_image_name;
                 $file_name = basename( $file_path );
 
                 // Insert the image as an attachment
@@ -218,14 +248,17 @@ function set_product_images( $product_id, $images ) {
                 wp_update_attachment_metadata( $attach_id, $attach_data );
 
                 // Add the image to the product gallery
-                $gallery_ids   = get_post_meta( $product_id, '_product_image_gallery', true );
-                $gallery_ids   = !empty( $gallery_ids ) ? explode( ',', $gallery_ids ) : [];
                 $gallery_ids[] = $attach_id;
-                update_post_meta( $product_id, '_product_image_gallery', implode( ',', $gallery_ids ) );
 
                 // Set the first image as the featured image
-                set_post_thumbnail( $product_id, $attach_id );
+                if ( $first_image ) {
+                    set_post_thumbnail( $product_id, $attach_id );
+                    $first_image = false;
+                }
             }
         }
+
+        // Update the product gallery meta field
+        update_post_meta( $product_id, '_product_image_gallery', implode( ',', $gallery_ids ) );
     }
 }
